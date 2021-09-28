@@ -9,12 +9,12 @@ Extracts annotations from a document scanned under infrared light and inserts th
 
 ## Timings (in seconds)
 
-read: 0.4200859069824219
-bb: 0.10314464569091797
-homo: 0.0001049041748046875
-warp: 0.03565788269042969
-write: 0.12440276145935059
-annot: 3.0618648529052734
+ * read images: 0.4200859069824219
+ * bounding boxes: 0.10314464569091797
+ * homography: 0.0001049041748046875
+ * warp: 0.03565788269042969
+ * write image: 0.12440276145935059
+ * insert annotation: 3.0618648529052734
 
 # References
 
