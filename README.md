@@ -1,5 +1,12 @@
 # ir-annotation-extraction
+
 Extracts annotations from a document scanned under infrared light and inserts those annotations into the original PDF.
+
+Very work in Progress.
+
+<p align="center">
+  <img src="doc/screenshot.png" width=596 height=317>
+</p>
 
 # Usage
 
