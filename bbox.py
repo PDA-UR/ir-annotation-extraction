@@ -16,20 +16,24 @@ def get_text_bb(img):
 
     # low pass filter to get rid of noise and small spots
     blur = cv2.GaussianBlur(img_grayscale, (9,9), 0)
-    plt.imshow(blur, 'gray')
-    plt.show()
 
-    # dilate to get rid of small spots
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5,5))
-    dilation = cv2.dilate(blur, kernel, iterations=1)
-    plt.imshow(dilation, 'gray')
-    plt.show()
+    ## dilate to get rid of small spots
+    #kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5,5))
+    #dilation = cv2.dilate(blur, kernel, iterations=1)
+    #plt.imshow(dilation, 'gray')
+    #plt.show()
 
-    # huge erosion kernel to emphasize text areas
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7,7))
-    erosion = cv2.erode(dilation, kernel, iterations=5)
-    plt.imshow(erosion, 'gray')
+    ## huge erosion kernel to emphasize text areas
+    #kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7,7))
+    #erosion = cv2.erode(dilation, kernel, iterations=5)
+    #plt.imshow(erosion, 'gray')
+    #plt.show()
+
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (21,21))
+    opening = cv2.morphologyEx(img_grayscale, cv2.MORPH_OPEN, kernel)
+    plt.imshow(opening, 'gray')
     plt.show()
+    erosion = opening
 
     # threshold for contour detection
     # adaptive because image might have a brightness gradient
@@ -37,7 +41,11 @@ def get_text_bb(img):
     plt.imshow(thresh, 'gray')
     plt.show()
 
-    contours, hierarchy = cv2.findContours(thresh,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+
+    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    #minRect = cv2.minAreaRect(contours)
+    #print(minRect)
 
     x_values = []
     y_values = []
@@ -70,6 +78,8 @@ def get_text_bb(img):
     y = min(y_values)
     w = max(x_values) - x
     h = max(y_values) - y
+
+    cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
 
     plt.imshow(img)
     plt.show()
