@@ -26,25 +26,27 @@ def normalize_image(img):
     img = img.astype(np.uint8)
     return img
 
-if(len(sys.argv) < 4):
+if(len(sys.argv) < 2):
     print('too few arguments')
-    print('usage: python3 insert_annotation.py pdf_path annotation_path ir_scan_path')
+    print('usage: python3 insert_annotation.py path')
     sys.exit(0)
 
-pdf_path = sys.argv[1]
-annotation_path = sys.argv[2]
-ir_scan_path = sys.argv[3]
+path = sys.argv[1]
+pdf_path = path.split('_')[0] + '.pdf'
+pdf_page = int(path.split('_')[-1])
+annotation_path = path + '_annotation.png'
+ir_scan_path = path + '_IR.png'
 temp_image_path = 'temp.png'
 out_path = 'output.pdf'
 
 # TODO maybe scale down images for faster processing?
 ir_scan = cv2.imread(ir_scan_path) # todo grayscale
 annot = cv2.imread(annotation_path, cv2.IMREAD_UNCHANGED)
-pdf_pages = convert_from_path(pdf_path, 300, first_page=1, last_page=1, grayscale=True, size=(ir_scan.shape[1], None))
+pdf_pages = convert_from_path(pdf_path, 300, first_page=pdf_page, last_page=pdf_page, grayscale=True, size=(ir_scan.shape[1], None))
 
 # if a bias image is given, use it to normalize brightness distribution over the image
-if(len(sys.argv) > 4):
-    bias_image_path= sys.argv[4]
+if(len(sys.argv) > 3):
+    bias_image_path= sys.argv[2]
     bias_image = cv2.imread(bias_image_path)
     ir_scan = overlay_bias_image(bias_image, ir_scan, 0.6)
     ir_scan = normalize_image(ir_scan)
@@ -87,7 +89,7 @@ cv2.imwrite(temp_image_path, result)
 annotator = PdfAnnotator(pdf_path)
 annotator.add_annotation(
     'image',
-    Location(x1=0, y1=0, x2=612, y2=792, page=0),
+    Location(x1=0, y1=0, x2=612, y2=792, page=pdf_page-1),
     Appearance(stroke_color=(1, 0, 0), stroke_width=5, image=temp_image_path),
 )
 annotator.write(out_path)

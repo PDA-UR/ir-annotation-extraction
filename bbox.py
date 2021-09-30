@@ -5,7 +5,15 @@ import sys
 import numpy as np
 from matplotlib import pyplot as plt
 
+DEBUG = True
+
+def show_image(img):
+    if(DEBUG == True):
+        plt.imshow(img, 'gray')
+        plt.show()
+
 def get_text_bb(img):
+
     # convert to grayscale if it is not already
     if(len(img.shape) > 2):
         img_grayscale = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -31,15 +39,13 @@ def get_text_bb(img):
 
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (21,21))
     opening = cv2.morphologyEx(img_grayscale, cv2.MORPH_OPEN, kernel)
-    plt.imshow(opening, 'gray')
-    plt.show()
+    show_image(opening)
     erosion = opening
 
     # threshold for contour detection
     # adaptive because image might have a brightness gradient
     thresh = cv2.adaptiveThreshold(erosion, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 21, 10)
-    plt.imshow(thresh, 'gray')
-    plt.show()
+    show_image(thresh)
 
 
     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -71,7 +77,8 @@ def get_text_bb(img):
         x_values.append(x + w)
         y_values.append(y)
         y_values.append(y + h)
-        cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        if(DEBUG):
+            cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
     # final bounding box
     x = min(x_values)
@@ -79,10 +86,10 @@ def get_text_bb(img):
     w = max(x_values) - x
     h = max(y_values) - y
 
-    cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
+    if(DEBUG):
+        cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
 
-    plt.imshow(img)
-    plt.show()
+    show_image(img)
     return (x, y, w, h)
 
 

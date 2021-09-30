@@ -65,8 +65,8 @@ def showImage(img, imageName ='Default'):
     cv.waitKey(0)
 
 def saveImage(img, fileName):
-    imgFilePath = str(os.getcwd()) + "/" + str(fileName)
-    cv.imwrite(imgFilePath, img)
+    #imgFilePath = str(os.getcwd()) + "/" + str(fileName)
+    cv.imwrite(fileName, img)
 
 # Binary Threshold and Contours generation, save extracted Background Text 
 def addContours(imgWithAnnotations):
@@ -100,7 +100,7 @@ def addMarkerHighlights(origImg, extractedImg):
     #showImage(highlightedImg,'original highlighted')
     return highlightedImg
 
-def saveTransparentImage(img):
+def saveTransparentImage(img, filename):
 #source: https://stackoverflow.com/questions/55673060/how-to-set-white-pixels-to-transparent-using-opencv --> answer by Qwertford
     # read the image
     image_bgr = cv.cvtColor(img, cv.COLOR_RGBA2RGB)
@@ -113,7 +113,7 @@ def saveTransparentImage(img):
     # change the values of Alpha to 0 for all the white pixels
     image_bgra[white, -1] = 0
     # save the image
-    saveImage(image_bgra, str(cfg.EXTRACTED_ANN_WITH_ALPHA_CHANNEL))
+    saveImage(image_bgra, filename)
         
 
 def main(scanTypeNum, filename, highlightOption = False):
@@ -124,10 +124,10 @@ def main(scanTypeNum, filename, highlightOption = False):
     
     # get directory path names
     # TODO move to config
-    rgbScanPath = filename + '_rgb.png'
-    IRtextScanPath = filename + '_ir.png'
+    rgbScanPath = filename + '_RGB.png'
+    IRtextScanPath = filename + '_IR.png'
     IRemptyScanPath = 'bias.png'
-    
+
     # Read and assign Scanned Images, in RGBA mode (option = -1)
     rgbImg = cv.imread(rgbScanPath, -1) 
     IRtextImg = cv.imread(IRtextScanPath,-1)
@@ -167,14 +167,15 @@ def main(scanTypeNum, filename, highlightOption = False):
         extractionResultImg = addedContourImg
         
     # Save and show final extraction result 
-    saveImage(extractionResultImg, filename + '_annotation')
-    saveTransparentImage(extractionResultImg)
-    showImage(extractionResultImg, 'Extraction Result')
+    #saveImage(extractionResultImg, filename + '_annotation.png')
+    saveTransparentImage(extractionResultImg, filename + '_annotation.png')
+    #saveTransparentImage(extractionResultImg)
+    #showImage(extractionResultImg, 'Extraction Result')
 
 
 
 if __name__ == "__main__":
-    main(cfg.DEFAULT_MODE)
+    main(cfg.MEDIUM_TEXT, sys.argv[1], True)
 
     #if len(sys.argv) < 2:
     #    main(cfg.DEFAULT_MODE)
