@@ -41,14 +41,15 @@ out_path = 'output.pdf'
 
 # TODO maybe scale down images for faster processing?
 ir_scan = cv2.imread(ir_scan_path) # todo grayscale
+ir_scan = ir_scan[:,:,2]
 annot = cv2.imread(annotation_path, cv2.IMREAD_UNCHANGED)
 pdf_pages = convert_from_path(pdf_path, 300, first_page=pdf_page, last_page=pdf_page, grayscale=True, size=(ir_scan.shape[1], None))
 
 # if a bias image is given, use it to normalize brightness distribution over the image
 if(len(sys.argv) > 3):
-    bias_image_path= sys.argv[2]
+    bias_image_path = sys.argv[2]
     bias_image = cv2.imread(bias_image_path)
-    ir_scan = overlay_bias_image(bias_image, ir_scan, 0.6)
+    ir_scan = overlay_bias_image(bias_image, ir_scan, 0.5)
     ir_scan = normalize_image(ir_scan)
 
 # have to be the same size
