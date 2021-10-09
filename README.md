@@ -23,6 +23,10 @@ Very work in Progress.
  * write image: 0.12440276145935059
  * insert annotation: 3.0618648529052734
 
+## Ideas
+
+ * stack color channels of IR scan for 3x resolution? Problem: we do not know the order (and it might be arbitrary)
+
 # References
 
 Test image taken from the paper *[The interplay of pedestrian navigation, wayfinding devices, and environmental features in indoor settings](https://dl.acm.org/doi/abs/10.1145/2857491.2857533)*.
