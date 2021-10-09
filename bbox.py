@@ -5,7 +5,7 @@ import sys
 import numpy as np
 from matplotlib import pyplot as plt
 
-DEBUG = True
+DEBUG = False
 
 def show_image(img):
     if(DEBUG == True):
@@ -60,6 +60,9 @@ def get_text_bb(img):
     min_w = img.shape[1] / 100
     min_h = img.shape[0] / 200
     #print(min_w, min_h)
+
+    if(DEBUG):
+        img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
 
     # find bounding boxes around contours and remember minimum and maximum coordinates
     # the final bounding box spans all detected contours (and thus the whole text)
