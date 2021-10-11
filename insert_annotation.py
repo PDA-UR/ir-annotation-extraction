@@ -6,14 +6,7 @@ from bbox import get_text_bb
 from pdf2image import convert_from_path
 from matplotlib import pyplot as plt
 import os
-
-# in case the brightness distribution of the IR scan is uneven,
-# it is recommended to record an empty bias frame and use it
-# to normalize the brightness distribution over the image
-def overlay_bias_image(bias_image, scan, alpha=1.0):
-    bias_inverted = cv2.bitwise_not(bias_image)
-    result = cv2.addWeighted(scan, alpha, bias_inverted, 1.0 - alpha, 0.0)
-    return result
+from util import overlay_bias_image
 
 # adjust black and white point to use whole dynamic range
 def normalize_image(img):

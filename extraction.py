@@ -3,6 +3,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import os
 import sys
+from util import overlay_bias_image
 
 #source: https://stackoverflow.com/questions/55673060/how-to-set-white-pixels-to-transparent-using-opencv2 --> answer by Qwertford
 def save_image(img, filename):
@@ -33,11 +34,6 @@ def remove_rgb_background(img):
 
     # background pixels are black now, therefore we make them white
     result[np.where((result == [0, 0, 0]).all(axis=2))] = [255, 255, 255]
-    return result
-
-def overlay_bias_image(bias_image, scan, alpha=1.0):
-    bias_inverted = cv2.bitwise_not(bias_image)
-    result = cv2.addWeighted(scan, alpha, bias_inverted, 1.0 - alpha, 0.0)
     return result
 
 def main(filename):
