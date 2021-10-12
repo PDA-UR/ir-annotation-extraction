@@ -6,18 +6,7 @@ from bbox import get_text_bb
 from pdf2image import convert_from_path
 from matplotlib import pyplot as plt
 import os
-from util import overlay_bias_image
-
-# adjust black and white point to use whole dynamic range
-def normalize_image(img):
-    minimum = np.amin(img)
-    maximum = np.amax(img)
-    img = img.astype(np.float32)
-    img -= minimum
-    img /= maximum - minimum
-    img *= 255
-    img = img.astype(np.uint8)
-    return img
+from util import overlay_bias_image, normalize_image
 
 if(len(sys.argv) < 2):
     print('too few arguments')
