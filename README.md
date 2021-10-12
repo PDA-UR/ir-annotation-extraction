@@ -23,6 +23,12 @@ Very work in Progress.
  * write image: 0.12440276145935059
  * insert annotation: 3.0618648529052734
 
+## Discoveries
+
+ * highlighter annotations can be extracted rather robustly by using HSV color space, only keeping highly saturated areas, and dilating the resulting mask
+   * this could lead to false positives with color prints
+ * pen annotations such as notes or underlines can be extracted by thresholding IR and RGB image and performing an XOR operation
+
 ## Ideas
 
  * stack color channels of IR scan for 3x resolution? Problem: we do not know the order (and it might be arbitrary)
