@@ -36,6 +36,12 @@ def remove_rgb_background(img):
     result[np.where((result == [0, 0, 0]).all(axis=2))] = [255, 255, 255]
     return result
 
+def crop_image(img, margin):
+    w = img.shape[1]
+    h = img.shape[0]
+    img = img[margin : h - margin, margin : w - margin]
+    return img
+
 def main(filename):
     DEBUG = False
 
@@ -47,6 +53,12 @@ def main(filename):
     img_IR = cv2.imread(ir_path)
     img_IR = img_IR[:,:,2]
     img_bias = cv2.imread(bias_path, cv2.IMREAD_GRAYSCALE) 
+
+    ## crop images
+    #crop_margin = 20
+    #img_rgb = crop_image(img_rgb, crop_margin)
+    #img_IR = crop_image(img_IR, crop_margin)
+    #img_bias = crop_image(img_bias, crop_margin)
 
     #img_rgb = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2RGB)
 
