@@ -69,11 +69,19 @@ result = cv2.warpPerspective(annot, homography, (pdf_image.shape[1], pdf_image.s
 cv2.imwrite(temp_image_path, result)
 
 # source: https://github.com/plangrid/pdf-annotate
-# pdf default scale: 612x792
+# pdf default scale: 612x792 (US letter)
+# 595.276 x 841.89 (A4)
+
+pdf_size = dict()
+pdf_size['A4'] = (595.276, 841.89)
+pdf_size['letter'] = (612, 792)
+
+pdf_format = 'A4'
+
 annotator = PdfAnnotator(pdf_path)
 annotator.add_annotation(
     'image',
-    Location(x1=0, y1=0, x2=612, y2=792, page=pdf_page-1),
+    Location(x1=0, y1=0, x2=pdf_size[pdf_format][0], y2=pdf_size[pdf_format][1], page=pdf_page-1),
     Appearance(stroke_color=(1, 0, 0), stroke_width=5, image=temp_image_path),
 )
 annotator.write(out_path)
