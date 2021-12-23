@@ -19,7 +19,8 @@ pdf_page = int(path.split('_')[-1])
 annotation_path = path + '_annotation.png'
 ir_scan_path = path + '_IR.png'
 temp_image_path = 'temp.png'
-out_path = 'output.pdf'
+#out_path = path.split('_')[0] + '_' + path.split('_')[1] + '_out.pdf'
+out_path = pdf_path
 
 # TODO maybe scale down images for faster processing?
 ir_scan = cv2.imread(ir_scan_path) # todo grayscale
