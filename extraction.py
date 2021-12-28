@@ -42,7 +42,7 @@ def crop_image(img, margin):
     img = img[margin : h - margin, margin : w - margin]
     return img
 
-def extract_annotations(rgb_path, ir_path, bias_path, out_path)
+def extract_annotations(rgb_path, ir_path, bias_path, out_path):
     DEBUG = False
 
     img_rgb = cv2.imread(rgb_path)
@@ -97,6 +97,7 @@ def extract_annotations(rgb_path, ir_path, bias_path, out_path)
         plt.show()
 
     save_image(img_annotations, out_path)
+    return out_path
 
 if __name__ == "__main__":
     if len(sys.argv) > 4:
