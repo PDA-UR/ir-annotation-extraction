@@ -42,7 +42,7 @@ def crop_image(img, margin):
     img = img[margin : h - margin, margin : w - margin]
     return img
 
-def main(paths):
+def extract_annotations(paths):
     DEBUG = False
 
     # TODO exception handling
@@ -106,7 +106,7 @@ def main(paths):
 
 if __name__ == "__main__":
     if len(sys.argv) > 4:
-        main(sys.argv)
+        extract_annotations(sys.argv)
     else:
         print('Too few arguments.')
         print('Usage: python3 extraction.py RGB_IMAGE IR_IMAGE BIAS_IMAGE OUTPUT')
