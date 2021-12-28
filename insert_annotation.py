@@ -20,7 +20,7 @@ def insert_annotation(annotation_path, ir_scan_path, bias_image_path, pdf_path, 
     pdf_pages = convert_from_path(pdf_path, 300, first_page=pdf_page, last_page=pdf_page, grayscale=True, size=(ir_scan.shape[1], None))
 
     # use bias image to normalize brightness distribution over the image
-    bias_image = cv2.imread(bias_image_path)
+    bias_image = cv2.imread(bias_image_path, cv2.IMREAD_GRAYSCALE)
     ir_scan = overlay_bias_image(bias_image, ir_scan, 0.5)
     ir_scan = normalize_image(ir_scan)
 
