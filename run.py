@@ -30,40 +30,50 @@ pdf_pages = pdf.getNumPages()
 annotation_paths = sorted(glob(f'{directory_path}*_annotation.png'))
 ir_paths = sorted(glob(f'{directory_path}*_IR.png'))
 rgb_paths = sorted(glob(f'{directory_path}*_RGB.png'))
-paths_trunkated = sorted(list(map(lambda p : p.replace('_IR.png', ''), ir_paths)))
+#paths_trunkated = list(map(lambda p : p.replace('_annotation.png', ''), annotation_paths))
+#paths_trunkated += list(map(lambda p : p.replace('_IR.png', ''), ir_paths))
+#paths_trunkated = sorted(list(set(paths_trunkated)))
+#print(paths_trunkated)
 
 # iterate over PDF pages and check if there are matching IR scans
 for p in range(1, pdf_pages + 1):
-    matching = [s for s in paths_trunkated if f'_{p:02d}' in s]
-    if len(matching) == 1:
-        trunkated = matching[0]
-        matching_ir = [s for s in ir_paths if trunkated in s]
-        matching_rgb = [s for s in rgb_paths if trunkated in s]
-        matching_annotation = [s for s in annotation_paths if trunkated in s]
+    annotations = [s for s in annotation_paths if f'_{p:02d}' in s]
+    ir = [s for s in ir_paths if f'_{p:02d}' in s]
 
-        if(len(matching_ir) != 1):
-            print('can not find IR image', matching_ir)
+    #base_path = f'{directory_path}_{p:02d}'
+    #print(base_path)
+    #break
+
+    # first, check if there is already an annotation file
+    if len(annotations) > 1:
+        print('multiple matching annotation files found, skipping...')
+        # skip for now, TODO maybe implement manual selection later?
+        continue
+    elif len(annotations) == 0:
+        # we don't have annotation files -> try to extract them from IR scans
+
+        if(len(ir) == 0):
+            print('no annotation files or IR scans found, skipping...')
             continue
-
-        if(len(matching_rgb) != 1):
-            print('can not find RGB image', matching_rgb)
+        elif(len(ir) > 1):
+            print('multiple matching IR scans found, skipping...')
+            # skip for now, TODO maybe implement manual selection later?
             continue
+        else:
+            rgb = [s for s in rgb_paths if f'_{p:02d}' in s]
+            if(len(rgb) != 1):
+                print('RGB scans not found or ambiguous, skipping...')
+                continue
 
-        if(len(matching_annotation) > 1):
-            print('found too many matching annotation files', matching_rgb)
-            continue
-        elif(len(matching_annotation) == 0):
-            print(f'extracting: {trunkated}')
-            # TODO exception handling
-            extraction_result_path = extract_annotations(matching_rgb[0], matching_ir[0], bias_path, f'{trunkated}_annotation.png')
-            matching_annotation.append(extraction_result_path)
+            print(f'extracting annotations for page {p}')
+            extraction_result_path = extract_annotations(rgb[0], ir[0], bias_path, ir[0].replace('_IR.png', '_annotation.png'))
+            print(f'extracted annotations written to {extraction_result_path}')
+            annotations.append(extraction_result_path)
 
+    if(len(ir) == 1):
         print('inserting annotations')
-        insert_annotation(matching_annotation[0], matching_ir[0], bias_path, out_path, p, out_path)
+        insert_annotation(annotations[0], ir[0], bias_path, out_path, p, out_path)
         print(f'{out_path} page {p} written')
-    elif len(matching) == 0:
-        print(f'no annotations found for page {p}')
-        continue 
     else:
-        # manual selection I guess?
-        pass
+        print('IR scans not found or ambiguous, skipping...')
+        continue
