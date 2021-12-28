@@ -1,5 +1,8 @@
 #!/bin/sh
 
+echo "deprecated - this will not work any more"
+exit(0)
+
 for path in "$@"
 do
     # extract annotations based on RGB scan and IR scan
