@@ -3,7 +3,7 @@ import sys
 import cv2
 import numpy as np
 from bbox import get_text_bb
-from pdf2image import convert_from_path
+from pdf2image import convert_from_path, pdfinfo_from_path
 from matplotlib import pyplot as plt
 import os
 from util import overlay_bias_image, normalize_image
@@ -26,6 +26,7 @@ out_path = pdf_path
 ir_scan = cv2.imread(ir_scan_path) # todo grayscale
 ir_scan = ir_scan[:,:,2]
 annot = cv2.imread(annotation_path, cv2.IMREAD_UNCHANGED)
+
 pdf_pages = convert_from_path(pdf_path, 300, first_page=pdf_page, last_page=pdf_page, grayscale=True, size=(ir_scan.shape[1], None))
 
 # if a bias image is given, use it to normalize brightness distribution over the image
@@ -64,19 +65,30 @@ homography, _ = cv2.findHomography(pts_ir, pts_pdf)
 
 result = cv2.warpPerspective(annot, homography, (pdf_image.shape[1], pdf_image.shape[0]))
 
+
+## insert annotation into PDF
+
 # required as PdfAnnotator takes string or ImageFile as argument
 # TODO: maybe modify PdfAnnotator?
 cv2.imwrite(temp_image_path, result)
 
-# source: https://github.com/plangrid/pdf-annotate
-# pdf default scale: 612x792 (US letter)
-# 595.276 x 841.89 (A4)
+pdf_info = pdfinfo_from_path(pdf_path)
+pdf_aspect_text = pdf_info['Page size']
+pdf_aspect = (float(pdf_aspect_text.split(' ')[0]), float(pdf_aspect_text.split(' ')[2]))
 
+# source: https://github.com/plangrid/pdf-annotate
+# scales are in dots per inch (default: 72)
+# example US letter: 11" x 72 dpi = 792 dots
+# values:
+# 612 x 792 (US letter)
+# 595.276 x 841.89 (A4)
 pdf_size = dict()
 pdf_size['A4'] = (595.276, 841.89)
+pdf_size['A5'] = (841.89 / 2, 595.276)
 pdf_size['letter'] = (612, 792)
+pdf_size['auto'] = pdf_aspect
 
-pdf_format = 'A4'
+pdf_format = 'auto'
 
 annotator = PdfAnnotator(pdf_path)
 annotator.add_annotation(
@@ -87,3 +99,6 @@ annotator.add_annotation(
 annotator.write(out_path)
 
 os.remove(temp_image_path)
+
+#if __name__ == '__main__':
+# TODO
