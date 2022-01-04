@@ -21,12 +21,12 @@ def save_image(img, filename):
 
 # get rid of background in RGB image by converting image to HSV
 # and masking away areas with low saturation and high value (e.g. paper)
-def remove_rgb_background(img):
+def remove_rgb_background(img, sat_thresh=50, val_thresh=200):
     img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
     # low saturation, high value areas are the background
-    lower = np.array([0, 0, 200])
-    upper = np.array([255, 50, 255])
+    lower = np.array([0, 0, val_thresh])
+    upper = np.array([255, sat_thresh, 255])
 
     thresh = cv2.inRange(img_hsv, lower, upper)
     thresh = cv2.bitwise_not(thresh)
@@ -35,6 +35,22 @@ def remove_rgb_background(img):
     # background pixels are black now, therefore we make them white
     result[np.where((result == [0, 0, 0]).all(axis=2))] = [255, 255, 255]
     return result
+
+def get_rgb_colormask(img, sat_thresh=50, val_thresh=200):
+    img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+
+    # high saturation, not too dark or bright value areas are annotations
+    lower = np.array([0, sat_thresh, val_thresh])
+    upper = np.array([255, 255, 255 - val_thresh])
+
+    thresh = cv2.inRange(img_hsv, lower, upper)
+    thresh = cv2.bitwise_not(thresh)
+    result = cv2.bitwise_and(img, img, mask=thresh)
+
+    result[np.where((result != [0, 0, 0]).all(axis=2))] = [255, 255, 255]
+    result = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
+    return result
+
 
 # removes red/blue fringing due to not exactly aligned color channels because of scanner movement
 def remove_fringing(img):
@@ -103,7 +119,7 @@ def extract_annotations(rgb_path, ir_path, bias_path, out_path):
     _, img_IR_thresh = cv2.threshold(img_IR_clean, 110, 255, 0)
 
     inverted = cv2.bitwise_not(img_IR_thresh)
-    kernel = np.ones((3, 3), np.uint8)
+    kernel = np.ones((5, 5), np.uint8)
     img_IR_dilate = cv2.dilate(inverted, kernel, iterations=2)
 
     if(DEBUG):
@@ -122,15 +138,56 @@ def extract_annotations(rgb_path, ir_path, bias_path, out_path):
     if(DEBUG):
         fig, axes = plt.subplots(1, 2)
         axes[0].set_title('RGB image')
-        axes[1].set_title('result')
+        axes[1].set_title('defringe')
         axes[0].imshow(img_rgb)
         axes[1].imshow(img_rgb_defringe)
         plt.show()
 
-    img_rgb_clean = remove_rgb_background(img_rgb_defringe)
+    img_rgb_clean = remove_rgb_background(img_rgb_defringe, 20, 200)
 
-    img_IR_dilate = cv2.cvtColor(img_IR_dilate, cv2.COLOR_GRAY2BGR)
-    img_annotations = cv2.add(img_rgb_clean, img_IR_dilate)
+    if(DEBUG):
+        fig, axes = plt.subplots(1, 3)
+        axes[0].set_title('sat 80')
+        axes[1].set_title('sat 100')
+        axes[2].set_title('sat 120')
+        axes[0].imshow(get_rgb_colormask(img_rgb_clean, 80, 10), 'gray')
+        axes[1].imshow(get_rgb_colormask(img_rgb_clean, 100, 10), 'gray')
+        axes[2].imshow(get_rgb_colormask(img_rgb_clean, 120, 10), 'gray')
+        plt.show()
+
+    """
+    if(DEBUG):
+        fig, axes = plt.subplots(1, 3)
+        axes[0].set_title('val 0')
+        axes[1].set_title('val 10')
+        axes[2].set_title('val 20')
+        axes[0].imshow(get_rgb_colormask(img_rgb_clean, 120, 0), 'gray')
+        axes[1].imshow(get_rgb_colormask(img_rgb_clean, 120, 10), 'gray')
+        axes[2].imshow(get_rgb_colormask(img_rgb_clean, 120, 20), 'gray')
+        plt.show()
+    """
+
+    img_rgb_mask = get_rgb_colormask(img_rgb_clean, 100, 10)
+    img_rgb_mask = cv2.bitwise_not(img_rgb_mask)
+    img_mask_result = cv2.subtract(img_IR_dilate, img_rgb_mask)
+
+    #img_IR_dilate = cv2.cvtColor(img_IR_dilate, cv2.COLOR_GRAY2BGR)
+    img_mask_result = cv2.cvtColor(img_mask_result, cv2.COLOR_GRAY2BGR)
+
+    if(DEBUG):
+        fig, axes = plt.subplots(1, 4)
+        axes[0].set_title('RGB clean')
+        axes[1].set_title('IR dilate')
+        axes[2].set_title('rgb mask')
+        axes[3].set_title('result mask')
+        axes[0].imshow(img_rgb_clean)
+        axes[1].imshow(img_IR_dilate, 'gray')
+        axes[2].imshow(img_rgb_mask, 'gray')
+        axes[3].imshow(img_mask_result, 'gray')
+        plt.show()
+
+    #img_annotations = cv2.add(img_rgb_clean, img_IR_dilate)
+    img_annotations = cv2.add(img_rgb_clean, img_mask_result)
 
     #_, annotation_thresh = cv2.threshold(img_annotations, 200, 255, cv2.THRESH_BINARY)
     #annotation_thresh = cv2.bitwise_not(annotation_thresh)
