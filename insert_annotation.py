@@ -18,6 +18,7 @@ def insert_annotation(annotation_path, ir_scan_path, bias_image_path, pdf_path, 
     annot = cv2.imread(annotation_path, cv2.IMREAD_UNCHANGED)
 
     pdf_pages = convert_from_path(pdf_path, 300, first_page=pdf_page, last_page=pdf_page, grayscale=True, size=(ir_scan.shape[1], None))
+    #pdf_pages = convert_from_path(pdf_path, 300, first_page=pdf_page, last_page=pdf_page, grayscale=True, size=(ir_scan.shape[1], ir_scan.shape[0]))
 
     # use bias image to normalize brightness distribution over the image
     bias_image = cv2.imread(bias_image_path, cv2.IMREAD_GRAYSCALE)
@@ -52,6 +53,20 @@ def insert_annotation(annotation_path, ir_scan_path, bias_image_path, pdf_path, 
     #annot = cv2.resize(annot, (src1.shape[1], src1.shape[0]))
 
     result = cv2.warpPerspective(annot, homography, (pdf_image.shape[1], pdf_image.shape[0]))
+    #result2 = cv2.warpPerspective(ir_scan, homography, (pdf_image.shape[1], pdf_image.shape[0]))
+
+    #pdf_image = cv2.cvtColor(pdf_image, cv2.COLOR_GRAY2RGBA)
+    #result2 = cv2.cvtColor(result2, cv2.COLOR_GRAY2RGBA)
+
+    #print('result', result.shape)
+    #print('pdf', pdf_image.shape)
+    #print('ir', result2.shape)
+
+    #tmp = cv2.addWeighted(result2, 0.5, pdf_image, 0.5, 0.0)
+    ##tmp = cv2.bitwise_and(pdf_image, result)
+
+    #plt.imshow(tmp)
+    #plt.show()
 
     ## insert annotation into PDF
 
