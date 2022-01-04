@@ -76,6 +76,38 @@ def remove_fringing(img):
 
     return img_result
 
+# removes black fringing at the top and bottom of text
+def grow_printed_text(img):
+    ## might be more performant, but did not work as well
+    #kernel = np.asarray([[  0,    0, 1,    0,   0], 
+    #                     [0, 1,   1, 1, 0], 
+    #                     [0, 1,   1, 1, 0], 
+    #                     [0, 1,   1, 1, 0], 
+    #                     [  0,    0, 1,    0,   0]], np.uint8)
+    #result = cv2.dilate(img, kernel, iterations=3)
+
+    # dilate once to grow text
+    kernel = np.ones((3, 3), np.uint8)
+    result = cv2.dilate(img, kernel, iterations=1)
+
+    # create copies and shift them up/down
+    result_shift_1 = result.copy()
+    result_shift_1 = np.roll(result_shift_1, 1, axis=0)
+    result_shift_2 = result.copy()
+    result_shift_2 = np.roll(result_shift_2, -1, axis=0)
+    result_shift_3 = result.copy()
+    result_shift_3 = np.roll(result_shift_3, 2, axis=0)
+    result_shift_4 = result.copy()
+    result_shift_4 = np.roll(result_shift_4, -2, axis=0)
+
+    # add shifted copies to original
+    result = cv2.add(result, result_shift_1)
+    result = cv2.add(result, result_shift_2)
+    result = cv2.add(result, result_shift_3)
+    result = cv2.add(result, result_shift_4)
+
+    return result
+
 def crop_image(img, margin):
     w = img.shape[1]
     h = img.shape[0]
@@ -119,8 +151,7 @@ def extract_annotations(rgb_path, ir_path, bias_path, out_path):
     _, img_IR_thresh = cv2.threshold(img_IR_clean, 110, 255, 0)
 
     inverted = cv2.bitwise_not(img_IR_thresh)
-    kernel = np.ones((5, 5), np.uint8)
-    img_IR_dilate = cv2.dilate(inverted, kernel, iterations=2)
+    img_IR_dilate = grow_printed_text(inverted)
 
     if(DEBUG):
         fig, axes = plt.subplots(1, 3)
