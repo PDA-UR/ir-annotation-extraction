@@ -36,6 +36,30 @@ def remove_rgb_background(img):
     result[np.where((result == [0, 0, 0]).all(axis=2))] = [255, 255, 255]
     return result
 
+# removes red/blue fringing due to not exactly aligned color channels because of scanner movement
+def remove_fringing(img):
+    # work on image copies as np operations overwrite the original image
+    img_blue = img.copy()
+    img_red = img.copy()
+
+    # get blue and red color channels (those are the farthest away)
+    blue_channel = img_blue[:,:,0]
+    red_channel = img_red[:,:,2]
+
+    # move channels in opposite directions
+    blue_channel = np.roll(blue_channel, 1, axis=0)
+    red_channel = np.roll(red_channel, -1, axis=0)
+
+    # apply changes to color channels
+    img_blue[:,:,0] = blue_channel
+    img_red[:,:,2] = red_channel
+
+    # the results now have green/purple fringing in opposite directions
+    # therefore, blend them together for a result with less color fringing
+    img_result = cv2.addWeighted(img_blue, 0.5, img_red, 0.5, 0.0)
+
+    return img_result
+
 def crop_image(img, margin):
     w = img.shape[1]
     h = img.shape[0]
@@ -57,6 +81,11 @@ def extract_annotations(rgb_path, ir_path, bias_path, out_path):
     #img_bias = crop_image(img_bias, crop_margin)
 
     #img_rgb = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2RGB)
+
+    #img_rgb_og = img_rgb.copy()
+    #img_defringe_blue, img_defringe_red = remove_fringing(img_rgb)
+    #img_rgb_blend = cv2.addWeighted(img_rgb_og, 0.6, img_rgb_defringe, 0.4, 0.0)
+    #img_rgb_blend = cv2.addWeighted(img_defringe_blue, 0.5, img_defringe_red, 0.5, 0.0)
 
     if(DEBUG):
         fig, axes = plt.subplots(1, 3)
@@ -87,7 +116,18 @@ def extract_annotations(rgb_path, ir_path, bias_path, out_path):
         axes[2].imshow(img_IR_dilate, 'gray')
         plt.show()
 
-    img_rgb_clean = remove_rgb_background(img_rgb)
+    # remove color fringing from RGB image
+    img_rgb_defringe = remove_fringing(img_rgb)
+
+    if(DEBUG):
+        fig, axes = plt.subplots(1, 2)
+        axes[0].set_title('RGB image')
+        axes[1].set_title('result')
+        axes[0].imshow(img_rgb)
+        axes[1].imshow(img_rgb_defringe)
+        plt.show()
+
+    img_rgb_clean = remove_rgb_background(img_rgb_defringe)
 
     img_IR_dilate = cv2.cvtColor(img_IR_dilate, cv2.COLOR_GRAY2BGR)
     img_annotations = cv2.add(img_rgb_clean, img_IR_dilate)
