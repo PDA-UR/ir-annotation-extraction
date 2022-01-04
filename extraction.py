@@ -59,14 +59,19 @@ def extract_annotations(rgb_path, ir_path, bias_path, out_path):
     #img_rgb = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2RGB)
 
     if(DEBUG):
-        fig, axes = plt.subplots(1, 2)
+        fig, axes = plt.subplots(1, 3)
+        axes[0].set_title('RGB image')
+        axes[1].set_title('IR image')
+        axes[2].set_title('bias image')
         axes[0].imshow(img_rgb)
         axes[1].imshow(img_IR, 'gray')
+        axes[2].imshow(img_bias, 'gray')
         plt.show()
 
     img_IR_clean = overlay_bias_image(img_bias, img_IR, 0.5)
 
-    _, img_IR_thresh = cv2.threshold(img_IR_clean, 125, 255, 0)
+    #_, img_IR_thresh = cv2.threshold(img_IR_clean, 125, 255, 0)
+    _, img_IR_thresh = cv2.threshold(img_IR_clean, 110, 255, 0)
 
     inverted = cv2.bitwise_not(img_IR_thresh)
     kernel = np.ones((3, 3), np.uint8)
@@ -74,6 +79,9 @@ def extract_annotations(rgb_path, ir_path, bias_path, out_path):
 
     if(DEBUG):
         fig, axes = plt.subplots(1, 3)
+        axes[0].set_title('IR clean')
+        axes[1].set_title('IR thresh')
+        axes[2].set_title('IR dilate')
         axes[0].imshow(img_IR_clean, 'gray')
         axes[1].imshow(img_IR_thresh, 'gray')
         axes[2].imshow(img_IR_dilate, 'gray')
@@ -91,12 +99,16 @@ def extract_annotations(rgb_path, ir_path, bias_path, out_path):
 
     if(DEBUG):
         fig, axes = plt.subplots(1, 3)
+        axes[0].set_title('RGB image')
+        axes[1].set_title('cleaned RGB')
+        axes[2].set_title('annotations')
         axes[0].imshow(img_rgb)
         axes[1].imshow(img_rgb_clean)
         axes[2].imshow(img_annotations)
         plt.show()
 
-    save_image(img_annotations, out_path)
+    if not DEBUG:
+        save_image(img_annotations, out_path)
     return out_path
 
 if __name__ == "__main__":
