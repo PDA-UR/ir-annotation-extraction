@@ -13,6 +13,7 @@ from timeit import default_timer as timer
 def insert_annotation(annotation_path, ir_scan_path, bias_image_path, pdf_path, pdf_page, out_path):
     temp_image_path = 'temp.png'
 
+    start = timer()
     # TODO maybe scale down images for faster processing?
     ir_scan = cv2.imread(ir_scan_path) # todo grayscale
     ir_scan = ir_scan[:,:,2]
@@ -24,9 +25,18 @@ def insert_annotation(annotation_path, ir_scan_path, bias_image_path, pdf_path, 
     # use bias image to normalize brightness distribution over the image
     bias_image = cv2.imread(bias_image_path, cv2.IMREAD_GRAYSCALE)
 
-    ir_scan = overlay_bias_image(bias_image, ir_scan, 0.5)
+    end = timer()
+    print(f'{ir_scan_path},insert,1,read_images,{end-start}')
 
+    start = timer()
+    ir_scan = overlay_bias_image(bias_image, ir_scan, 0.5)
+    end = timer()
+    print(f'{ir_scan_path},insert,2,overlay_bias_image,{end-start}')
+
+    start = timer()
     ir_scan = normalize_image(ir_scan)
+    end = timer()
+    print(f'{ir_scan_path},insert,3,normalize_image,{end-start}')
 
     # have to be the same size
     #print(ir_scan.shape)
@@ -35,11 +45,15 @@ def insert_annotation(annotation_path, ir_scan_path, bias_image_path, pdf_path, 
     pdf_image = np.array(pdf_pages[0])
 
     # calculate bounding boxes
+    start = timer()
     bb_ir_scan = get_text_bb(ir_scan)
     bb_pdf_image = get_text_bb(pdf_image)
+    end = timer()
+    print(f'{ir_scan_path},insert,4,find_bounding_boxes,{end-start}')
 
     # use corners of bounding boxes to calculate homography
     # TODO: move to function and/or external file
+    start = timer()
     pts_ir = np.array([ [bb_ir_scan[0],                 bb_ir_scan[1]],
                         [bb_ir_scan[0] + bb_ir_scan[2], bb_ir_scan[1]],
                         [bb_ir_scan[0] + bb_ir_scan[2], bb_ir_scan[1] + bb_ir_scan[3]],
@@ -51,11 +65,16 @@ def insert_annotation(annotation_path, ir_scan_path, bias_image_path, pdf_path, 
                         [bb_pdf_image[0],                   bb_pdf_image[1] + bb_pdf_image[3]]])
 
     homography, _ = cv2.findHomography(pts_ir, pts_pdf)
+    end = timer()
+    print(f'{ir_scan_path},insert,5,find_homography,{end-start}')
 
     # not required as annotation and ir_scan are the same size
     #annot = cv2.resize(annot, (src1.shape[1], src1.shape[0]))
 
+    start = timer()
     result = cv2.warpPerspective(annot, homography, (pdf_image.shape[1], pdf_image.shape[0]))
+    end = timer()
+    print(f'{ir_scan_path},insert,6,warp_perspective,{end-start}')
     #result2 = cv2.warpPerspective(ir_scan, homography, (pdf_image.shape[1], pdf_image.shape[0]))
 
     #pdf_image = cv2.cvtColor(pdf_image, cv2.COLOR_GRAY2RGBA)
@@ -75,6 +94,7 @@ def insert_annotation(annotation_path, ir_scan_path, bias_image_path, pdf_path, 
 
     # required as PdfAnnotator takes string or ImageFile as argument
     # TODO: maybe modify PdfAnnotator?
+    start = timer()
     cv2.imwrite(temp_image_path, result)
 
     pdf_info = pdfinfo_from_path(pdf_path)
@@ -104,6 +124,8 @@ def insert_annotation(annotation_path, ir_scan_path, bias_image_path, pdf_path, 
     annotator.write(out_path)
 
     os.remove(temp_image_path)
+    end = timer()
+    print(f'{ir_scan_path},insert,7,insert_into_pdf,{end-start}')
 
 #path = sys.argv[1]
 #pdf_path = path.split('_')[0] + '.pdf'

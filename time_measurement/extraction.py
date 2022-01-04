@@ -4,6 +4,7 @@ from matplotlib import pyplot as plt
 import os
 import sys
 from util import overlay_bias_image
+from timeit import default_timer as timer
 
 #source: https://stackoverflow.com/questions/55673060/how-to-set-white-pixels-to-transparent-using-opencv2 --> answer by Qwertford
 def save_image(img, filename):
@@ -117,10 +118,13 @@ def crop_image(img, margin):
 def extract_annotations(rgb_path, ir_path, bias_path, out_path):
     DEBUG = False
 
+    start = timer()
     img_rgb = cv2.imread(rgb_path)
     img_IR = cv2.imread(ir_path)
     img_IR = img_IR[:,:,2]
     img_bias = cv2.imread(bias_path, cv2.IMREAD_GRAYSCALE) 
+    end = timer()
+    print(f'{ir_path},extract,1,read_images,{end-start}')
 
     ## crop images
     #crop_margin = 20
@@ -145,14 +149,20 @@ def extract_annotations(rgb_path, ir_path, bias_path, out_path):
         axes[2].imshow(img_bias, 'gray')
         plt.show()
 
+    start = timer()
     img_IR_clean = overlay_bias_image(img_bias, img_IR, 0.5)
+    end = timer()
+    print(f'{ir_path},extract,2,overlay_bias_image,{end-start}')
 
     #_, img_IR_thresh = cv2.threshold(img_IR_clean, 125, 255, 0)
     _, img_IR_thresh = cv2.threshold(img_IR_clean, 110, 255, 0)
 
     inverted = cv2.bitwise_not(img_IR_thresh)
 
+    start = timer()
     img_IR_dilate = grow_printed_text(inverted)
+    end = timer()
+    print(f'{ir_path},extract,3,grow_printed_text,{end-start}')
 
     if(DEBUG):
         fig, axes = plt.subplots(1, 3)
@@ -165,7 +175,10 @@ def extract_annotations(rgb_path, ir_path, bias_path, out_path):
         plt.show()
 
     # remove color fringing from RGB image
+    start = timer()
     img_rgb_defringe = remove_fringing(img_rgb)
+    end = timer()
+    print(f'{ir_path},extract,4,defringe,{end-start}')
 
     if(DEBUG):
         fig, axes = plt.subplots(1, 2)
@@ -175,7 +188,10 @@ def extract_annotations(rgb_path, ir_path, bias_path, out_path):
         axes[1].imshow(img_rgb_defringe)
         plt.show()
 
+    start = timer()
     img_rgb_clean = remove_rgb_background(img_rgb_defringe, 20, 200)
+    end = timer()
+    print(f'{ir_path},extract,5,remove_rgb_background,{end-start}')
 
     if(DEBUG):
         fig, axes = plt.subplots(1, 3)
@@ -199,9 +215,12 @@ def extract_annotations(rgb_path, ir_path, bias_path, out_path):
         plt.show()
     """
 
+    start = timer()
     img_rgb_mask = get_rgb_colormask(img_rgb_clean, 100, 10)
     img_rgb_mask = cv2.bitwise_not(img_rgb_mask)
     img_mask_result = cv2.subtract(img_IR_dilate, img_rgb_mask)
+    end = timer()
+    print(f'{ir_path},extract,6,prepare_rgb_image,{end-start}')
 
     #img_IR_dilate = cv2.cvtColor(img_IR_dilate, cv2.COLOR_GRAY2BGR)
     img_mask_result = cv2.cvtColor(img_mask_result, cv2.COLOR_GRAY2BGR)
@@ -237,7 +256,10 @@ def extract_annotations(rgb_path, ir_path, bias_path, out_path):
         plt.show()
 
     if not DEBUG:
+        start = timer()
         save_image(img_annotations, out_path)
+        end = timer()
+        print(f'{ir_path},extract,7,save_result,{end-start}')
     return out_path
 
 if __name__ == "__main__":
